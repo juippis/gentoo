@@ -3,7 +3,9 @@
 
 EAPI=7
 
-inherit meson xdg-utils
+LUA_COMPAT=( lua5-{1..3} luajit )
+
+inherit lua-single meson xdg-utils
 
 DESCRIPTION="Enlightenment Foundation Libraries all-in-one package"
 HOMEPAGE="https://www.enlightenment.org"
@@ -14,15 +16,14 @@ SLOT="0"
 KEYWORDS="~amd64 ~arm ~arm64 ~hppa ~ppc ~ppc64 ~x86"
 IUSE="+X avif bmp connman cpu_flags_arm_neon dds debug doc drm +eet efl-one elogind examples fbcon
 	+fontconfig fribidi gif gles2-only gnutls glib +gstreamer harfbuzz hyphen ibus ico libressl
-	lua +luajit jpeg2k json nls mono opengl +pdf physics pmaps postscript psd pulseaudio raw scim
-	sdl +sound +ssl +svg +system-lz4 systemd tga tgv tiff tslib unwind v4l vnc wayland webp xcf
-	xim xpm xpresent zeroconf"
+	+lua_single_target_luajit jpeg2k json nls mono opengl +pdf physics pmaps postscript psd
+	pulseaudio raw scim sdl +sound +ssl +svg +system-lz4 systemd tga tgv tiff tslib unwind v4l vnc
+	wayland webp xcf xim xpm xpresent zeroconf"
 
-REQUIRED_USE="
+REQUIRED_USE="${LUA_REQUIRED_USE}
 	?? ( elogind systemd )
 	?? ( gles2-only opengl )
 	?? ( fbcon tslib )
-	^^ ( lua luajit )
 	ssl
 	drm? ( gles2-only )
 	examples? ( eet svg )
@@ -89,8 +90,6 @@ RDEPEND="
 	ibus? ( app-i18n/ibus )
 	jpeg2k? ( media-libs/openjpeg:= )
 	json? ( >=media-libs/rlottie-0.0.1_pre20200424:= )
-	lua? ( dev-lang/lua:* )
-	luajit? ( dev-lang/luajit:* )
 	mono? ( dev-lang/mono )
 	opengl? ( virtual/opengl )
 	pdf? ( app-text/poppler:=[cxx] )
@@ -180,7 +179,7 @@ src_configure() {
 		$(meson_use gstreamer)
 		$(meson_use harfbuzz)
 		$(meson_use hyphen)
-		$(meson_use luajit elua)
+		$(meson_use lua_single_target_luajit elua)
 		$(meson_use nls)
 		$(meson_use physics)
 		$(meson_use pulseaudio)
@@ -254,13 +253,13 @@ src_configure() {
 	emesonargs+=( -D ecore-imf-loaders-disabler="${disabledImfLoaders}" )
 
 	local bindingsList="cxx,"
-	use luajit && bindingsList+="lua,"
+	use lua_single_target_luajit && bindingsList+="lua,"
 	use mono && bindingsList+="mono,"
 	[[ ! -z "$bindingsList" ]] && bindingsList=${bindingsList::-1}
 	emesonargs+=( -D bindings="${bindingsList}" )
 
 	local luaChoice=""
-	if use luajit; then
+	if use lua_single_target_luajit; then
 		luaChoice+="luajit"
 	else
 		luaChoice+="lua"
